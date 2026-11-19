@@ -25,11 +25,63 @@ footer{background:#0d3020;color:#f4f0e5;padding:28px 22px;border-top:3px solid v
 a{color:var(--g)}.album{display:inline-block;margin:8px 8px 0 0;padding:10px 13px;border:1px solid var(--gold);border-radius:4px;text-decoration:none;background:white;font:bold 13px Arial}
 @media(max-width:760px){.tag{display:none}.grid2{grid-template-columns:1fr}.gallery{grid-template-columns:1fr 1fr}.quick{grid-template-columns:1fr 1fr}.foot{flex-direction:column;align-items:flex-start}}
 @media(max-width:500px){.head{padding:10px;gap:9px}.logo{width:58px;height:58px}.municipal-logo{width:52px;height:60px}.brand{font-size:18px}.hero{min-height:340px}.heroIn{padding:40px 17px}.hero p{font-size:16px}nav a{padding:10px;font-size:12px}section{padding:38px 16px}h2{font-size:28px}.gallery{grid-template-columns:1fr}}
-.head{display:grid;grid-template-columns:1fr 3fr 1fr;align-items:center;text-align:center}
+.head{
+display:grid;
+grid-template-columns:100px 1fr 100px;
+align-items:center;
+text-align:center;
+gap:10px;
+}
+
 .logo-pair{display:contents}
-.logo{grid-column:1;justify-self:start;background:transparent;padding:0}
-.municipal-logo{grid-column:3;justify-self:end;background:transparent;padding:0}
-.brand{grid-column:2;grid-row:1;text-align:center}
+
+.logo{
+grid-column:1;
+justify-self:start;
+width:100px;
+height:100px;
+background:transparent;
+padding:0;
+}
+
+.municipal-logo{
+grid-column:3;
+justify-self:end;
+width:100px;
+height:100px;
+background:transparent;
+padding:0;
+}
+
+.brand{
+grid-column:2;
+grid-row:1;
+text-align:center;
+}
+
+.tag{
+grid-column:2;
+grid-row:2;
+margin:0;
+text-align:center;
+}
+
+@media(max-width:500px){
+.head{
+grid-template-columns:76px 1fr 76px;
+gap:5px;
+}
+.logo{
+width:76px;
+height:76px;
+}
+.municipal-logo{
+width:76px;
+height:76px;
+}
+.brand{
+font-size:18px;
+}
 @media(max-width:500px){.head{grid-template-columns:60px 1fr 60px;gap:6px}.logo{width:58px;height:58px}.municipal-logo{width:52px;height:60px}.brand{font-size:18px}}</style></head><body>
 <div class="top">Turistika · výlety · přátelství · Ostrožská Lhota</div>
 <header><div class="head"><div class="logo-pair"><img class="logo" src="assets/logo.jpg" alt="Logo Turistického klubu"><img class="municipal-logo" src="https://upload.wikimedia.org/wikipedia/commons/c/c4/Ostro%C5%BEsk%C3%A1_Lhota%2C_znak.jpg" alt="Oficiální znak obce Ostrožská Lhota" title="Znak obce Ostrožská Lhota"></div><div class="brand">Turistický klub <span>Ostrožská Lhota</span></div><div class="tag">Oficiální prezentace klubu<br><small>zkušební verze webu</small></div></div></header>
