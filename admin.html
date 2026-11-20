@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Testovací administrace – Turistický klub Ostrožská Lhota</title>
+<style>
+*{box-sizing:border-box}body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#f3f5f7;color:#17202a;margin:0;padding:20px}
+main{max-width:1000px;margin:auto}.panel{background:white;border:1px solid #dce2e8;border-radius:12px;padding:18px;margin:14px 0;box-shadow:0 2px 8px #00000008}
+h1{font-size:1.4rem}label{display:block;font-weight:600;margin:10px 0 5px}input,select,textarea,button{font:inherit;width:100%;padding:10px;border:1px solid #c7d0d9;border-radius:8px}
+textarea{min-height:240px;font-family:ui-monospace,monospace}button{background:#174b37;color:white;border:0;margin-top:10px;cursor:pointer;font-weight:600}button.secondary{background:#475569}button.danger{background:#a33131}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.status{white-space:pre-wrap;background:#f1f5f9;border-radius:8px;padding:10px;margin-top:10px}.hint{color:#526170;font-size:.9rem}.hidden{display:none}
+@media(max-width:650px){.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<h1>Testovací administrace – Turistický klub Ostrožská Lhota</h1>
+<p class="hint">Oddělená testovací stránka. Zatím nezasahuje do veřejného webu. Používejte pouze Supabase publishable/anon klíč – nikdy service-role klíč.</p>
+<section class="panel" id="config">
+<h2>1. Nastavení připojení</h2>
+<label for="url">Supabase Project URL</label><input id="url" placeholder="https://xxxxx.supabase.co">
+<label for="key">Publishable / anon key</label><input id="key" placeholder="Veřejný anon/publishable klíč">
+<button id="connect">Uložit nastavení a připojit</button>
+<button class="secondary" id="clearConfig">Vymazat uložené nastavení</button>
+<div class="hint">URL a veřejný klíč se uloží pouze do tohoto prohlížeče.</div>
+</section>
+<section class="panel" id="auth">
+<h2>2. Přihlášení</h2>
+<label for="email">E-mail</label><input id="email" type="email" autocomplete="username">
+<label for="password">Heslo</label><input id="password" type="password" autocomplete="current-password">
+<div class="row"><button id="login">Přihlásit</button><button class="secondary" id="logout">Odhlásit</button></div>
+<div id="authStatus" class="status">Nepřipojeno.</div>
+</section>
+<section class="panel hidden" id="editor">
+<h2>3. Testovací editor dat</h2>
+<label for="table">Tabulka</label><select id="table">
+<option value="posts">posts (články)</option><option value="events">events (akce)</option><option value="board_members">board_members (členové)</option><option value="albums">albums (alba)</option><option value="photos">photos (fotky)</option>
+</select>
+<button id="load">Načíst záznamy</button>
+<label for="records">Načtené záznamy</label><select id="records"><option value="">— nejprve načtěte —</option></select>
+<label for="json">JSON záznamu (upravte a uložte)</label><textarea id="json" spellcheck="false"></textarea>
+<div class="row"><button id="save">Uložit změny</button><button class="secondary" id="newRecord">Nový záznam</button></div>
+<div class="status" id="editorStatus">Po přihlášení vyberte tabulku a načtěte záznamy.</div>
+</section>
+<section class="panel"><h2>Bezpečnostní upozornění</h2><p>Editor vyžaduje správně nastavené Row Level Security (RLS) v Supabase. Samotné přihlášení nestačí k bezpečnému omezení oprávnění. Před použitím na skutečné webové stránce je nutné ověřit pravidla tabulek a omezit zápis pouze na administrátora.</p></section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+let sb=null, currentUser=null, rows=[], selected=null;
+const $=id=>document.getElementById(id);
+function status(s){$('authStatus').textContent=s}
+function editStatus(s){$('editorStatus').textContent=s}
+function getConfig(){return {url:$('url').value.trim(),key:$('key').value.trim()}}
+function init(){
+ const c=localStorage.getItem('tk_admin_config');
+ if(c){try{const x=JSON.parse(c);$('url').value=x.url||'';$('key').value=x.key||''}catch{}}
+}
+$('connect').onclick=async()=>{
+ const c=getConfig();if(!c.url||!c.key){status('Vyplňte URL a veřejný klíč.');return}
+ try{sb=window.supabase.createClient(c.url,c.key);localStorage.setItem('tk_admin_config',JSON.stringify(c));status('Připojení připraveno. Přihlaste se.')}
+ catch(e){status('Chyba nastavení: '+e.message)}
+};
+$('clearConfig').onclick=()=>{localStorage.removeItem('tk_admin_config');$('url').value='';$('key').value='';sb=null;status('Nastavení vymazáno.')};
+$('login').onclick=async()=>{
+ if(!sb){status('Nejprve nastavte připojení.');return}
+ const {data,error}=await sb.auth.signInWithPassword({email:$('email').value,password:$('password').value});
+ if(error){status('Přihlášení selhalo: '+error.message);return}
+ currentUser=data.user;$('editor').classList.remove('hidden');status('Přihlášen účet: '+currentUser.email+' — RLS musí kontrolovat oprávnění.');
+};
+$('logout').onclick=async()=>{if(sb)await sb.auth.signOut();currentUser=null;$('editor').classList.add('hidden');status('Odhlášeno.')};
+$('load').onclick=async()=>{
+ if(!sb||!currentUser){editStatus('Nejprve se přihlaste.');return}
+ const table=$('table').value;editStatus('Načítám…');
+ const {data,error}=await sb.from(table).select('*').limit(100);
+ if(error){editStatus('Načtení selhalo: '+error.message);return}
+ rows=data||[];const sel=$('records');sel.innerHTML='';
+ rows.forEach((r,i)=>{const o=document.createElement('option');o.value=i;o.textContent=(r.title||r.name||r.full_name||r.id||('Záznam '+(i+1)))+' · '+i;sel.appendChild(o)});
+ if(rows.length){selected=0;$('json').value=JSON.stringify(rows[0],null,2);editStatus('Načteno '+rows.length+' záznamů.')}
+ else{$('json').value='{}';selected=null;editStatus('Tabulka je prázdná. Můžete vytvořit nový záznam.')}
+};
+$('records').onchange=()=>{selected=Number($('records').value);if(rows[selected])$('json').value=JSON.stringify(rows[selected],null,2)};
+$('newRecord').onclick=()=>{selected=null;$('records').value='';$('json').value='{}';editStatus('Nový záznam: doplňte JSON. Při uložení bude vložen jako nový řádek.')};
+$('save').onclick=async()=>{
+ if(!sb||!currentUser){editStatus('Nejprve se přihlaste.');return}
+ let obj;try{obj=JSON.parse($('json').value)}catch(e){editStatus('Neplatný JSON: '+e.message);return}
+ if(!obj||typeof obj!=='object'||Array.isArray(obj)){editStatus('JSON musí být objekt záznamu.');return}
+ const table=$('table').value;editStatus('Ukládám…');
+ let result;
+ if(selected!==null && rows[selected] && rows[selected].id!==undefined){
+   result=await sb.from(table).update(obj).eq('id',rows[selected].id).select();
+ }else{
+   result=await sb.from(table).insert(obj).select();
+ }
+ if(result.error){editStatus('Uložení selhalo: '+result.error.message);return}
+ editStatus('Uloženo. Pro kontrolu znovu načtěte tabulku.');
+};
+init();
+</script>
+</body></html>
