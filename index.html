@@ -77,4 +77,29 @@ input.addEventListener('keydown',function(e){if(e.key==='Enter')document.getElem
 document.getElementById('kmReset').addEventListener('click',function(){if(confirm('Opravdu vynulovat celkový počet kilometrů? Historie záznamů zůstane zachována.')){total=0;localStorage.setItem(key,'0');show();status.textContent='Celkový počet byl vynulován. Historie zůstala zachována.';}});
 })();
 </script>
-</body></html>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getStorage } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "VLOZ_API_KEY",
+  authDomain: "tkol-6e2d5.firebaseapp.com",
+  projectId: "tkol-6e2d5",
+  storageBucket: "tkol-6e2d5.firebasestorage.app",
+  appId: "1:698853960463:web:37c19500f2054b360dac7a"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+const storage = getStorage(app);
+
+window.firebaseApp = app;
+window.firebaseDB = db;
+window.firebaseAuth = auth;
+window.firebaseStorage = storage;
+
+console.log("Firebase propojeno");
+</script></body></html>
